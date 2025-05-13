@@ -7,14 +7,22 @@ vim.opt.expandtab = true
 vim.opt.shiftwidth = 2
 vim.opt.scroll = 5
 vim.opt.scrolloff = 2
+vim.opt.termbidi = true
 
 require "paq" {
   "savq/paq-nvim", -- let paq manage itself
   "tpope/vim-surround",
+  "rmagatti/auto-session",
   "tpope/vim-commentary",
   "tpope/vim-repeat",
+  "vim-test/vim-test",
   "shaunsingh/nord.nvim",
   "navarasu/onedark.nvim",
+  "airblade/vim-gitgutter",
+  "BurntSushi/ripgrep",
+  "nvim-telescope/telescope.nvim",
+  "sharkdp/fd",
+  -- "ribru17/bamboo.nvim",
   "nvim-lualine/lualine.nvim",
   "nvim-neo-tree/neo-tree.nvim",
   "nvim-lua/plenary.nvim",
@@ -85,104 +93,103 @@ require 'nvim-treesitter.configs'.setup {
   },
 }
 
-if not vim.g.vscode then
-  require('lualine').setup()
-  require('onedark').setup {
-    style = 'warm'
-  }
-  require('onedark').load()
+require('lualine').setup()
+require('onedark').setup {
+  style = 'warm'
+}
+-- require('bamboo').load()
+-- require('bamboo').setup {
+--   style = "multiplex"
+-- }
+require('onedark').load()
 
 
-  -- LSP ZERO
-  -- Reserve a space in the gutter
-  vim.opt.signcolumn = 'yes'
+-- lsp zero
+-- reserve a space in the gutter
+vim.opt.signcolumn = 'yes'
 
-  -- Add cmp_nvim_lsp capabilities settings to lspconfig
-  -- This should be executed before you configure any language server
-  local lspconfig_defaults = require('lspconfig').util.default_config
-  lspconfig_defaults.capabilities = vim.tbl_deep_extend(
-    'force',
-    lspconfig_defaults.capabilities,
-    require('cmp_nvim_lsp').default_capabilities()
-  )
+-- add cmp_nvim_lsp capabilities settings to lspconfig
+-- this should be executed before you configure any language server
+local lspconfig_defaults = require('lspconfig').util.default_config
+lspconfig_defaults.capabilities = vim.tbl_deep_extend(
+  'force',
+  lspconfig_defaults.capabilities,
+  require('cmp_nvim_lsp').default_capabilities()
+)
 
-  -- This is where you enable features that only work
-  -- if there is a language server active in the file
-  vim.api.nvim_create_autocmd('LspAttach', {
-    desc = 'LSP actions',
-    callback = function(event)
-      local opts = { buffer = event.buf }
+-- this is where you enable features that only work
+-- if there is a language server active in the file
+vim.api.nvim_create_autocmd('lspattach', {
+  desc = 'lsp actions',
+  callback = function(event)
+    local opts = { buffer = event.buf }
 
-      vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>', opts)
-      vim.keymap.set('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<cr>', opts)
-      vim.keymap.set('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<cr>', opts)
-      vim.keymap.set('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<cr>', opts)
-      vim.keymap.set('n', 'go', '<cmd>lua vim.lsp.buf.type_definition()<cr>', opts)
-      vim.keymap.set('n', 'gr', '<cmd>lua vim.lsp.buf.references()<cr>', opts)
-      vim.keymap.set('n', 'gs', '<cmd>lua vim.lsp.buf.signature_help()<cr>', opts)
-      vim.keymap.set('n', '<F2>', '<cmd>lua vim.lsp.buf.rename()<cr>', opts)
-      vim.keymap.set({ 'n', 'x' }, '<F3>', '<cmd>lua vim.lsp.buf.format({async = true})<cr>', opts)
-      vim.keymap.set('n', '<F4>', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
+    vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>', opts)
+    vim.keymap.set('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<cr>', opts)
+    vim.keymap.set('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<cr>', opts)
+    vim.keymap.set('n', 'gI', '<cmd>lua vim.lsp.buf.implementation()<cr>', opts)
+    vim.keymap.set('n', 'go', '<cmd>lua vim.lsp.buf.type_definition()<cr>', opts)
+    vim.keymap.set('n', 'gr', '<cmd>lua vim.lsp.buf.references()<cr>', opts)
+    vim.keymap.set('n', 'gs', '<cmd>lua vim.lsp.buf.signature_help()<cr>', opts)
+    vim.keymap.set('n', '<f2>', '<cmd>lua vim.lsp.buf.rename()<cr>', opts)
+    vim.keymap.set({ 'n', 'x' }, '<f3>', '<cmd>lua vim.lsp.buf.format({async = true})<cr>', opts)
+    vim.keymap.set('n', '<f4>', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
+  end,
+})
+
+-- you'll find a list of language servers here:
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md
+-- these are example language servers.
+require('lspconfig').ts_ls.setup({})
+require('lspconfig').lua_ls.setup({})
+require('lspconfig').hls.setup({})
+
+local cmp = require('cmp')
+
+
+cmp.setup({
+  sources = {
+    { name = 'nvim_lsp' },
+  },
+  snippet = {
+    expand = function(args)
+      -- you need neovim v0.10 to use vim.snippet
+      vim.snippet.expand(args.body)
     end,
-  })
+  },
 
-  -- You'll find a list of language servers here:
-  -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md
-  -- These are example language servers.
-  require('lspconfig').ts_ls.setup({})
-  require('lspconfig').lua_ls.setup({})
-  require('lspconfig').hls.setup({})
+  mapping = cmp.mapping.preset.insert({
+    ["<cr>"] = cmp.mapping.confirm({ select = true }),
+    -- ["<c-space>"] = cmp.mapping.complete(),
+  }),
+})
 
-  local cmp = require('cmp')
+vim.diagnostic.config({ update_in_insert = true })
 
+require("mason").setup()
+require("neo-tree").setup({
+  close_if_last_window = true,
+})
+require("conform").setup({
+  formatters_by_ft = {
+    lua = { "stylua" },
+    -- conform will run multiple formatters sequentially
+    -- conform will run the first available formatter
+    javascript = { "prettierd", "prettier", stop_after_first = true },
+    typescript = { "prettierd", "prettier", stop_after_first = true },
+  },
+  format_on_save = {
+    -- these options will be passed to conform.format()
+    timeout_ms = 500,
+    lsp_format = "fallback",
+  },
+})
 
-  cmp.setup({
-    sources = {
-      { name = 'nvim_lsp' },
-    },
-    snippet = {
-      expand = function(args)
-        -- You need Neovim v0.10 to use vim.snippet
-        vim.snippet.expand(args.body)
-      end,
-    },
+local builtin = require('telescope.builtin')
+vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Telescope find files' })
+vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = 'Telescope live grep' })
+vim.keymap.set('n', '<leader>fb', builtin.buffers, { desc = 'Telescope buffers' })
+vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = 'Telescope help tags' })
 
-    mapping = cmp.mapping.preset.insert({
-      ["<CR>"] = cmp.mapping.confirm({ select = true }),
-      -- ["<Leader>o"] = cmp.mapping.complete(),
-    }),
-  })
-
-  vim.diagnostic.config({ update_in_insert = true })
-
-  require("mason").setup()
-  -- require("mason-lspconfig").setup()
-  --
-
-  require("conform").setup({
-    formatters_by_ft = {
-      lua = { "stylua" },
-      -- Conform will run multiple formatters sequentially
-      -- Conform will run the first available formatter
-      javascript = { "prettierd", "prettier", stop_after_first = true },
-      typescript = { "prettierd", "prettier", stop_after_first = true },
-    },
-    format_on_save = {
-      -- These options will be passed to conform.format()
-      timeout_ms = 500,
-      lsp_format = "fallback",
-    },
-  })
-
-  require("neo-tree").setup({
-    close_if_last_window = true,
-    filesystem = {
-      filtered_items = {
-        visible = false,
-      }
-    },
-  })
-
-  vim.keymap.set('n', '<leader>d', vim.diagnostic.open_float, { noremap = true, silent = true })
-  vim.keymap.set('n', '<leader>t', ':Neotree toggle<CR>', { noremap = true, silent = true })
-end
+vim.keymap.set('n', '<leader>d', vim.diagnostic.open_float, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>t', ':Neotree toggle<cr>', { noremap = true, silent = true })
