@@ -7,11 +7,14 @@ vim.opt.expandtab = true
 vim.opt.shiftwidth = 2
 vim.opt.scroll = 5
 vim.opt.scrolloff = 2
+vim.opt.wrap = true
 vim.opt.termbidi = true
 
 require "paq" {
   "savq/paq-nvim", -- let paq manage itself
   "tpope/vim-surround",
+  "m4xshen/autoclose.nvim",
+  "abecodes/tabout.nvim",
   "rmagatti/auto-session",
   "tpope/vim-commentary",
   "tpope/vim-repeat",
@@ -169,6 +172,7 @@ vim.diagnostic.config({ update_in_insert = true })
 require("mason").setup()
 require("neo-tree").setup({
   close_if_last_window = true,
+  auto_restore_session_experimental = true,
 })
 require("conform").setup({
   formatters_by_ft = {
@@ -184,12 +188,26 @@ require("conform").setup({
     lsp_format = "fallback",
   },
 })
+require("auto-session").setup({
+  suppressed_dirs = { "~/", "~/Code", "~/Downloads", "/" },
+  -- to solve conflict between neo-tree and auto-session
+  pre_save_cmds = { "tabdo Neotree close" },
+  post_restore_cmds = { "Neotree" }
+});
+vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+
+require("autoclose").setup({})
+require("tabout").setup({})
 
 local builtin = require('telescope.builtin')
 vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Telescope find files' })
 vim.keymap.set('n', '<leader>fg', builtin.live_grep, { desc = 'Telescope live grep' })
 vim.keymap.set('n', '<leader>fb', builtin.buffers, { desc = 'Telescope buffers' })
 vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = 'Telescope help tags' })
+vim.keymap.set('n', '<leader>tf', ':TestFile<CR>', { desc = 'Test file' })
+vim.keymap.set('n', '<leader>tn', ':TestNearest<CR>', { desc = 'Run nearest test to cursor' })
+vim.keymap.set('n', '<leader>ts', ':TestSuite<CR>', { desc = 'Run full test suite' })
+vim.keymap.set('n', '<leader>tl', ':TestLast<CR>', { desc = 'Run the last test' })
 
 vim.keymap.set('n', '<leader>d', vim.diagnostic.open_float, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>t', ':Neotree toggle<cr>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>c', ':Neotree toggle<cr>', { noremap = true, silent = true })
