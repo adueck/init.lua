@@ -36,6 +36,7 @@ require "paq" {
   "neovim/nvim-lspconfig",
   "hrsh7th/nvim-cmp",
   "hrsh7th/cmp-nvim-lsp",
+  "VonHeikemen/lsp-zero.nvim",
   "mason-org/mason.nvim",
   "mason-org/mason-lspconfig.nvim",
   "stevearc/conform.nvim",
@@ -194,6 +195,15 @@ require("auto-session").setup({
   pre_save_cmds = { "tabdo Neotree close" },
   post_restore_cmds = { "Neotree" }
 });
+
+require("workspace-diagnostics").setup({})
+
+local lsp_zero = require('lsp-zero')
+
+lsp_zero.on_attach(function(client, bufnr)
+  require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr)
+end)
+
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
 require("autoclose").setup({})
