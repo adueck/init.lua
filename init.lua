@@ -29,7 +29,7 @@ require "paq" {
   "nvim-lualine/lualine.nvim",
   "nvim-neo-tree/neo-tree.nvim",
   "nvim-lua/plenary.nvim",
-  "nvim-tree/nvim-web-devicons", -- not strictly required, but recommended
+  "nvim-tree/nvim-web-devicons",
   "MunifTanjim/nui.nvim",
   { "nvim-treesitter/nvim-treesitter", build = ":tsupdate" },
   "nvim-treesitter/nvim-treesitter-textobjects",
@@ -38,8 +38,8 @@ require "paq" {
   "hrsh7th/cmp-nvim-lsp",
   "mason-org/mason.nvim",
   "mason-org/mason-lspconfig.nvim",
-  "neovim/nvim-lspconfig",
   "stevearc/conform.nvim",
+  "artemave/workspace-diagnostics.nvim",
 }
 
 require 'nvim-treesitter.configs'.setup {
@@ -162,7 +162,7 @@ cmp.setup({
   },
 
   mapping = cmp.mapping.preset.insert({
-    ["<cr>"] = cmp.mapping.confirm({ select = true }),
+    ["<tab>"] = cmp.mapping.confirm({ select = true }),
     -- ["<c-space>"] = cmp.mapping.complete(),
   }),
 })
@@ -209,5 +209,6 @@ vim.keymap.set('n', '<leader>tn', ':TestNearest<CR>', { desc = 'Run nearest test
 vim.keymap.set('n', '<leader>ts', ':TestSuite<CR>', { desc = 'Run full test suite' })
 vim.keymap.set('n', '<leader>tl', ':TestLast<CR>', { desc = 'Run the last test' })
 
+vim.keymap.set('n', '<leader>b', ':ls<CR>:buffer ', { desc = 'select buffer' })
 vim.keymap.set('n', '<leader>d', vim.diagnostic.open_float, { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>c', ':Neotree toggle<cr>', { noremap = true, silent = true })
