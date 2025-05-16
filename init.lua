@@ -19,13 +19,10 @@ require "paq" {
   "tpope/vim-commentary",
   "tpope/vim-repeat",
   "vim-test/vim-test",
-  "shaunsingh/nord.nvim",
-  "navarasu/onedark.nvim",
   "airblade/vim-gitgutter",
   "BurntSushi/ripgrep",
   "nvim-telescope/telescope.nvim",
   "sharkdp/fd",
-  -- "ribru17/bamboo.nvim",
   "nvim-lualine/lualine.nvim",
   "nvim-neo-tree/neo-tree.nvim",
   "nvim-lua/plenary.nvim",
@@ -41,6 +38,9 @@ require "paq" {
   "mason-org/mason-lspconfig.nvim",
   "stevearc/conform.nvim",
   "artemave/workspace-diagnostics.nvim",
+  -- theme
+  "Mofiqul/vscode.nvim",
+
 }
 
 require 'nvim-treesitter.configs'.setup {
@@ -98,15 +98,6 @@ require 'nvim-treesitter.configs'.setup {
 }
 
 require('lualine').setup()
-require('onedark').setup {
-  style = 'warm'
-}
--- require('bamboo').load()
--- require('bamboo').setup {
---   style = "multiplex"
--- }
-require('onedark').load()
-
 
 -- lsp zero
 -- reserve a space in the gutter
@@ -208,6 +199,41 @@ vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,
 
 require("autoclose").setup({})
 require("tabout").setup({})
+
+vim.o.background = 'dark'
+local c = require('vscode.colors').get_colors()
+require('vscode').setup({
+  -- Alternatively set style in setup
+  -- style = 'light'
+
+  -- Enable transparent background
+  transparent = false,
+
+  -- Enable italic comment
+  italic_comments = true,
+
+  -- Underline `@markup.link.*` variants
+  underline_links = true,
+
+  -- Disable nvim-tree background color
+  disable_nvimtree_bg = true,
+
+  -- Apply theme colors to terminal
+  terminal_colors = true,
+
+  -- Override colors (see ./lua/vscode/colors.lua)
+  -- color_overrides = {
+  --     vscLineNumber = '#FFFFFF',
+  -- },
+
+  -- -- Override highlight groups (see ./lua/vscode/theme.lua)
+  -- group_overrides = {
+  --     -- this supports the same val table as vim.api.nvim_set_hl
+  --     -- use colors from this colorscheme by requiring vscode.colors!
+  --     Cursor = { fg=c.vscDarkBlue, bg=c.vscLightGreen, bold=true },
+  -- }
+})
+vim.cmd.colorscheme "vscode"
 
 local builtin = require('telescope.builtin')
 vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = 'Telescope find files' })
