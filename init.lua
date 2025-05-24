@@ -7,13 +7,32 @@ vim.opt.expandtab = true
 vim.opt.shiftwidth = 2
 vim.opt.scroll = 5
 vim.opt.scrolloff = 2
-vim.opt.wrap = true
+vim.opt.wrap = false
 vim.opt.termbidi = true
 
 require "paq" {
   "savq/paq-nvim", -- let paq manage itself
   "tpope/vim-surround",
   "m4xshen/autoclose.nvim",
+  "chrisgrieser/nvim-various-textobjs",
+  {
+    "folke/which-key.nvim",
+    event = "VeryLazy",
+    opts = {
+      -- your configuration comes here
+      -- or leave it empty to use the default settings
+      -- refer to the configuration section below
+    },
+    keys = {
+      {
+        "<leader>?",
+        function()
+          require("which-key").show({ global = false })
+        end,
+        desc = "Buffer Local Keymaps (which-key)",
+      },
+    },
+  },
   "abecodes/tabout.nvim",
   "rmagatti/auto-session",
   "tpope/vim-commentary",
@@ -46,6 +65,9 @@ require "paq" {
 require 'nvim-treesitter.configs'.setup {
   ensure_installed = { 'bash', 'css', 'html', 'javascript', 'json', 'jsonc', 'lua', 'rust', 'typescript', 'haskell', 'racket' },
 
+  highlight = {
+    enable = true,
+  },
   incremental_selection = {
     enable = true,
     keymaps = {
@@ -56,6 +78,17 @@ require 'nvim-treesitter.configs'.setup {
     },
   },
   textobjects = {
+    swap = {
+      enable = true,
+      swap_next = {
+        ["<leader>a"] = "@parameter.inner",
+        ["<leader>n"] = "@statement.inner",
+      },
+      swap_previous = {
+        ["<leader>A"] = "@parameter.inner",
+        ["<leader>N"] = "@statement.inner",
+      },
+    },
     select = {
       enable = true,
 
@@ -66,10 +99,13 @@ require 'nvim-treesitter.configs'.setup {
         -- you can use the capture groups defined in textobjects.scm
         ["af"] = "@function.outer",
         ["if"] = "@function.inner",
+        ["aa"] = "@parameter.outer",
+        ["an"] = "@statement.outer",
+        ["in"] = "@statement.inner",
         -- you can optionally set descriptions to the mappings (used in the desc parameter of
         -- nvim_buf_set_keymap) which plugins like which-key display
         -- you can also use captures from other query groups like `locals.scm`
-        ["as"] = { query = "@local.scope", query_group = "locals", desc = "select language scope" },
+        -- ["as"] = { query = "@local.scope", query_group = "locals", desc = "select language scope" },
       },
       -- you can choose the select mode (default is charwise 'v')
       --
@@ -94,8 +130,60 @@ require 'nvim-treesitter.configs'.setup {
       -- and should return true or false
       include_surrounding_whitespace = false,
     },
+    move = {
+      enable = true,
+      set_jumps = true, -- whether to set jumps in the jumplist
+      goto_next_start = {
+        ["]m"] = "@function.outer",
+        ["]n"] = "@statement.outer",
+        ["]]"] = { query = "@class.outer", desc = "Next class start" },
+        --
+        -- You can use regex matching (i.e. lua pattern) and/or pass a list in a "query" key to group multiple queries.
+        ["]o"] = "@loop.*",
+        -- ["]o"] = { query = { "@loop.inner", "@loop.outer" } }
+        --
+        -- You can pass a query group to use query from `queries/<lang>/<query_group>.scm file in your runtime path.
+        -- Below example nvim-treesitter's `locals.scm` and `folds.scm`. They also provide highlights.scm and indent.scm.
+        ["]s"] = { query = "@local.scope", query_group = "locals", desc = "Next scope" },
+        ["]z"] = { query = "@fold", query_group = "folds", desc = "Next fold" },
+      },
+      goto_next_end = {
+        ["]M"] = "@function.outer",
+        ["]["] = "@class.outer",
+      },
+      goto_previous_start = {
+        ["[n"] = "@statement.outer",
+        ["[m"] = "@function.outer",
+        ["[["] = "@class.outer",
+      },
+      goto_previous_end = {
+        ["[M"] = "@function.outer",
+        ["[]"] = "@class.outer",
+      },
+    },
   },
 }
+
+vim.keymap.set({ "o", "x" }, "aS", '<cmd>lua require("various-textobjs").subword("outer")<CR>')
+vim.keymap.set({ "o", "x" }, "iS", '<cmd>lua require("various-textobjs").subword("inner")<CR>')
+vim.keymap.set({ "o", "x" }, "am", '<cmd>lua require("various-textobjs").chainMember("outer")<CR>')
+vim.keymap.set({ "o", "x" }, "im", '<cmd>lua require("various-textobjs").chainMember("inner")<CR>')
+
+local ts_repeat_move = require "nvim-treesitter.textobjects.repeatable_move"
+-- Repeat movement with ; and ,
+-- ensure ; goes forward and , goes backward regardless of the last direction
+vim.keymap.set({ "n", "x", "o" }, ";", ts_repeat_move.repeat_last_move_next)
+vim.keymap.set({ "n", "x", "o" }, ",", ts_repeat_move.repeat_last_move_previous)
+
+-- vim way: ; goes to the direction you were moving.
+-- vim.keymap.set({ "n", "x", "o" }, ";", ts_repeat_move.repeat_last_move)
+-- vim.keymap.set({ "n", "x", "o" }, ",", ts_repeat_move.repeat_last_move_opposite)
+
+-- Optionally, make builtin f, F, t, T also repeatable with ; and ,
+vim.keymap.set({ "n", "x", "o" }, "f", ts_repeat_move.builtin_f_expr, { expr = true })
+vim.keymap.set({ "n", "x", "o" }, "F", ts_repeat_move.builtin_F_expr, { expr = true })
+vim.keymap.set({ "n", "x", "o" }, "t", ts_repeat_move.builtin_t_expr, { expr = true })
+vim.keymap.set({ "n", "x", "o" }, "T", ts_repeat_move.builtin_T_expr, { expr = true })
 
 require('lualine').setup()
 
@@ -155,6 +243,7 @@ cmp.setup({
 
   mapping = cmp.mapping.preset.insert({
     ["<tab>"] = cmp.mapping.confirm({ select = true }),
+    ["<CR>"] = cmp.mapping.confirm({ select = true }),
     -- ["<c-space>"] = cmp.mapping.complete(),
   }),
 })
